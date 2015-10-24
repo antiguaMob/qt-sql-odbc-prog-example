@@ -59,17 +59,48 @@ int main(int argc, char*argv[])
        if (tables.empty() == false)
        {
           #ifdef DEBUG
-          qDebug() << tables;
+          qDebug() << "Table list: \n" << tables;
           #endif
 
-          // Construct a SQL statement.
-          QSqlQuery query("select @@version");
+          QSqlQuery query;   // QSqlQuery query("SQL statement");
+          bool resultSqlExec = false;
 
-          while( query.next() )
+          ////////// Construct SQL statement.
+
+          /*============================ Query MS SQL Server Version */
+          resultSqlExec = query.exec("SELECT @@version");   // query the MS SQL Server version
+          qDebug() << "SELECT @@version - Result: " << resultSqlExec;
+
+          while (query.next())
           {
              QString version = query.value(0).toString();
+             qDebug () << "The MS SQL Server version: \n" << version;
+          }
 
-             qDebug () << version;
+
+          /*============================ Create Table */
+          resultSqlExec = query.exec("CREATE TABLE person (id int PRIMARY KEY, "
+                                     "firstname VARCHAR(20), lastname VARCHAR(20))");
+          qDebug() << "create table \"person\" - Result: " << resultSqlExec;
+
+
+          /*============================ Drop Table */
+          resultSqlExec = query.exec("DROP TABLE person");
+          qDebug() << "drop table person - Result: " << resultSqlExec;
+
+
+          /*============================ Query All Tables */
+          int num = 1;
+
+          resultSqlExec = query.exec("SELECT * FROM INFORMATION_SCHEMA.Tables");
+          qDebug() << "create table customers - Result: " << resultSqlExec;
+
+          while (query.next())
+          {
+             QString tablename = query.value(2).toString();
+             qDebug () << "No. " << num << " - " << tablename;
+
+             num++;
           }
        }
        else
@@ -78,8 +109,12 @@ int main(int argc, char*argv[])
           qDebug() << "No tables in current DB!";
           #endif
 
+          db.close();  // close the opened DB connection.
+
           goto EXIT;
        }
+
+       db.close();  // close the opened DB connection.
     }  // if(ok)
     else
       cout << "Fail to open " << DB_TYPE << " DB!" << endl;
